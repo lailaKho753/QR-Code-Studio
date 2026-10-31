@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go QR Studio - Modern QR Management</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Smooth tab transition & canvas styling */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.25s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.4);
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-full flex flex-col font-sans transition-colors duration-200">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid fa-qrcode text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-lg tracking-tight text-slate-900 dark:text-white">Go QR Studio</span>
+                        <span class="px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 rounded-full border border-emerald-200 dark:border-emerald-800">
+                            Go Powered
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">High-performance QR processing backend</p>
+                </div>
+            </div>
+
+            <!-- Tab Buttons Navigation -->
+            <nav class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                <button id="tab-btn-scan" onclick="switchTab('scan')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                    <i class="fa-solid fa-expand"></i>
+                    <span>Scan QR</span>
+                </button>
+                <button id="tab-btn-generate" onclick="switchTab('generate')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Generate QR</span>
+                </button>
+            </nav>
+
+            <!-- Right Actions (Theme Toggle & Docs) -->
+            <div class="flex items-center gap-3">
+                <button onclick="toggleDarkMode()" class="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Toggle Theme">
+                    <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ================= SECTION 1: SCAN QR CODE ================= -->
+        <section id="sec-scan" class="tab-content">
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Scan QR Code</h1>
+                <p class="text-slate-500 dark:text-slate-400 text-sm">Upload or drag and drop an image containing a QR code to extract its decoded text or JSON payload.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Dropzone Area -->
+                <div class="lg:col-span-7 flex flex-col gap-4">
+                    <div id="dropzone" class="relative flex-1 min-h-[340px] border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-500 rounded-2xl p-8 text-center flex flex-col justify-center items-center bg-white dark:bg-slate-800/50 transition-all cursor-pointer group shadow-sm">
+                        <input type="file" id="qr-file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/png,image/jpeg" onchange="handleFileUpload(this.files[0])">
+                        
+                        <div id="dropzone-prompt" class="flex flex-col items-center">
+                            <div class="w-16 h-16 mb-4 rounded-2xl bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <h3 class="text-base font-semibold text-slate-800 dark:text-slate-200">Upload QR Code Image</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs">Drag and drop your file here, or click to browse (PNG, JPG)</p>
+                            <span class="mt-4 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                Maximum size: 10MB
+                            </span>
+                        </div>
+
+                        <!-- Image Preview Overlay -->
+                        <div id="preview-container" class="hidden relative w-full h-full max-h-[300px] flex items-center justify-center">
+                            <img id="qr-preview-img" src="" alt="QR Preview" class="max-h-[260px] max-w-full rounded-lg object-contain shadow-md">
+                            <button onclick="resetScanArea(event)" class="absolute top-2 right-2 p-2 rounded-full bg-slate-900/70 hover:bg-slate-900 text-white text-xs transition-all z-20" title="Remove image">
+                                <i class="fa-solid fa-xmark w-4 h-4 flex items-center justify-center"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Micro Helper Cards -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3.5 bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/60 flex items-center gap-3">
+                            <div class="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+                                <i class="fa-solid fa-shield-halved text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">Go Backend Parsing</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Uploaded image decoded by the Go server</p>
+                            </div>
+                        </div>
+                        <div class="p-3.5 bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/60 flex items-center gap-3">
+                            <div class="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                                <i class="fa-solid fa-code text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">Auto Format Detection</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Parses raw plain text and structured JSON</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decoded Output Panel -->
+                <div class="lg:col-span-5 flex flex-col">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm flex-1 flex flex-col overflow-hidden">
+                        <!-- Panel Header -->
+                        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-square-poll-vertical text-brand-500"></i>
+                                <span class="text-sm font-semibold text-slate-900 dark:text-white">Decoded Result</span>
+                            </div>
+                            <div id="scan-status-badge" class="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400 flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                <span>Awaiting file...</span>
+                            </div>
+                        </div>
+
+                        <!-- Output Content Body -->
+                        <div class="p-5 flex-1 flex flex-col justify-between">
+                            <div class="relative flex-1 min-h-[220px]">
+                                <textarea id="scan-output-text" readonly class="w-full h-full min-h-[220px] p-4 font-mono text-xs text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-xl resize-none focus:outline-none custom-scrollbar" placeholder="Decoded content will appear here..."></textarea>
+                            </div>
+
+                            <!-- Output Actions -->
+                            <div class="mt-4 flex items-center justify-between gap-3">
+                                <button id="btn-copy-scan" onclick="copyToClipboard('scan-output-text', 'btn-copy-scan')" disabled class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-200 dark:disabled:bg-slate-700 text-white disabled:text-slate-400 dark:disabled:text-slate-500 text-sm font-medium rounded-xl transition-all shadow-sm">
+                                    <i class="fa-regular fa-copy"></i>
+                                    <span>Copy Content</span>
+                                </button>
+                                <button id="btn-format-json" onclick="tryFormatScanJSON()" disabled class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-50 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-xl transition-all" title="Format as JSON">
+                                    <i class="fa-solid fa-code"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: GENERATE QR CODE ================= -->
+        <section id="sec-generate" class="tab-content">
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Generate QR Code</h1>
+                <p class="text-slate-500 dark:text-slate-400 text-sm">Construct custom JSON payloads or plain text and customize styling to produce optimized QR codes.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Editor & Controls Column -->
+                <div class="lg:col-span-7 flex flex-col gap-6">
+                    <!-- JSON Input Card -->
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm p-5">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                            <label for="json-input" class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-brackets-curly text-brand-500"></i>
+                                <span>Payload Editor (JSON / Text)</span>
+                            </label>
+                            
+                            <!-- Template Preset Dropdown -->
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-500">Presets:</span>
+                                <select id="preset-select" onchange="loadPreset(this.value)" class="text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-none rounded-lg px-2.5 py-1.5 font-medium focus:ring-2 focus:ring-brand-500 cursor-pointer">
+                                    <option value="user">User Profile</option>
+                                    <option value="config">App Config</option>
+                                    <option value="product">Product Specs</option>
+                                    <option value="plain">Simple Text</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Editor Canvas Area -->
+                        <div class="relative">
+                            <textarea id="json-input" oninput="validateAndGenerate()" rows="9" class="w-full p-4 font-mono text-xs bg-slate-900 text-slate-100 dark:text-slate-100 rounded-xl border border-slate-700 focus:ring-2 focus:ring-brand-500 focus:outline-none custom-scrollbar leading-relaxed" placeholder="Enter valid JSON or text payload..."></textarea>
+                            
+                            <!-- Validation Status Pill -->
+                            <div class="absolute bottom-3 right-3">
+                                <span id="json-status" class="px-2.5 py-1 rounded-md text-[11px] font-medium bg-emerald-900/80 text-emerald-300 border border-emerald-700/50 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check text-xs"></i>
+                                    <span>Valid JSON</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customization Parameters -->
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm p-5">
+                        <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-brand-500"></i>
+                            <span>Styling & Configuration Parameters</span>
+                        </h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Foreground Color -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Foreground Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="qr-color-dark" value="#0f172a" onchange="generateQRCode()" class="w-9 h-9 rounded-lg border border-slate-300 dark:border-slate-600 cursor-pointer bg-transparent">
+                                    <input type="text" id="qr-color-dark-text" value="#0f172a" readonly class="flex-1 px-3 py-1.5 text-xs font-mono bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300">
+                                </div>
+                            </div>
+
+                            <!-- Background Color -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Background Color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="qr-color-light" value="#ffffff" onchange="generateQRCode()" class="w-9 h-9 rounded-lg border border-slate-300 dark:border-slate-600 cursor-pointer bg-transparent">
+                                    <input type="text" id="qr-color-light-text" value="#ffffff" readonly class="flex-1 px-3 py-1.5 text-xs font-mono bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300">
+                                </div>
+                            </div>
+
+                            <!-- Size Slider -->
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <label class="text-xs font-medium text-slate-600 dark:text-slate-400">Resolution Size</label>
+                                    <span id="qr-size-val" class="text-xs font-mono text-slate-500">256 px</span>
+                                </div>
+                                <input type="range" id="qr-size" min="128" max="512" step="32" value="256" oninput="document.getElementById('qr-size-val').innerText = this.value + ' px'; generateQRCode()" class="w-full accent-brand-600 cursor-pointer">
+                            </div>
+
+                            <!-- Correction Level -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">Error Correction Level</label>
+                                <select id="qr-ecc" onchange="generateQRCode()" class="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-brand-500">
+                                    <option value="L">Low (7%)</option>
+                                    <option value="M" selected>Medium (15%)</option>
+                                    <option value="Q">Quartile (25%)</option>
+                                    <option value="H">High (30%)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Output Column -->
+                <div class="lg:col-span-5 flex flex-col">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm p-6 flex flex-col items-center justify-between h-full">
+                        <div class="w-full flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
+                            <span class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-eye text-brand-500"></i>
+                                <span>Live Output Preview</span>
+                            </span>
+                            <span class="text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-mono">Realtime</span>
+                        </div>
+
+                        <!-- Canvas Display Wrapper -->
+                        <div class="my-8 p-6 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200/80 dark:border-slate-700/50 flex flex-col items-center justify-center shadow-inner relative group">
+                            <div id="qrcode-container" class="transition-transform duration-200 group-hover:scale-105"></div>
+                        </div>
+
+                        <!-- Download Actions -->
+                        <div class="w-full space-y-2.5">
+                            <button onclick="downloadQR('png')" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-xl transition-all shadow-md shadow-brand-500/20">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Download PNG Image</span>
+                            </button>
+                            <button onclick="copyGeneratedData()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-xl transition-all">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Copy JSON String</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Global Toast Notification Component -->
+    <div id="toast" class="fixed bottom-6 right-6 translate-y-10 opacity-0 pointer-events-none transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700 z-50">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-msg" class="text-xs font-medium">Notification message</span>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Preset templates for QR generation
+        const PRESETS = {
+            user: JSON.stringify({
+                user_id: "usr_99812",
+                name: "Alex Morgan",
+                email: "alex.m@example.com",
+                role: "Administrator",
+                active: true
+            }, null, 2),
+            config: JSON.stringify({
+                server_endpoint: "https://api.internal.dev/v1",
+                timeout_ms: 5000,
+                retry_attempts: 3,
+                features: ["analytics", "realtime_logs"]
+            }, null, 2),
+            product: JSON.stringify({
+                sku: "PROD-8821-X",
+                batch: "B-2026-10",
+                origin: "ID-YOG",
+                inspection_pass: true
+            }, null, 2),
+            plain: "https://golang.org/"
+        };
+
+        let currentTab = 'scan';
+        let qrcodeObj = null;
+        let generateRequestID = 0;
+
+        // On Page Load Initialize
+        window.onload = function() {
+            // Set initial tab
+            switchTab('scan');
+            
+            // Set initial JSON generator content
+            document.getElementById('json-input').value = PRESETS.user;
+            validateAndGenerate();
+
+            // Color Picker Sync
+            document.getElementById('qr-color-dark').addEventListener('input', (e) => {
+                document.getElementById('qr-color-dark-text').value = e.target.value;
+            });
+            document.getElementById('qr-color-light').addEventListener('input', (e) => {
+                document.getElementById('qr-color-light-text').value = e.target.value;
+            });
+        };
+
+        // Tab Switching Logic
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // UI Button Active Styling
+            const scanBtn = document.getElementById('tab-btn-scan');
+            const genBtn = document.getElementById('tab-btn-generate');
+            const scanSec = document.getElementById('sec-scan');
+            const genSec = document.getElementById('sec-generate');
+
+            const activeClass = "bg-white dark:bg-slate-700 text-brand-600 dark:text-white shadow-sm";
+            const inactiveClass = "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white";
+
+            if (tab === 'scan') {
+                scanBtn.className = `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeClass}`;
+                genBtn.className = `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${inactiveClass}`;
+                scanSec.classList.add('active');
+                genSec.classList.remove('active');
+            } else {
+                genBtn.className = `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeClass}`;
+                scanBtn.className = `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${inactiveClass}`;
+                genSec.classList.add('active');
+                scanSec.classList.remove('active');
+            }
+        }
+
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'fa-solid fa-moon text-lg';
+            } else {
+                html.classList.add('dark');
+                icon.className = 'fa-solid fa-sun text-lg text-amber-400';
+            }
+        }
+
+        // ================= SECTION 1: SCAN QR CODE LOGIC =================
+        function handleFileUpload(file) {
+            if (!file) return;
+            if (!['image/png', 'image/jpeg'].includes(file.type)) {
+                showToast("Please choose a PNG or JPEG image", "error");
+                document.getElementById('qr-file-input').value = "";
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                showToast("File size must be 10MB or less", "error");
+                document.getElementById('qr-file-input').value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const img = document.getElementById('qr-preview-img');
+                img.src = e.target.result;
+                document.getElementById('dropzone-prompt').classList.add('hidden');
+                document.getElementById('preview-container').classList.remove('hidden');
+
+                const outputText = document.getElementById('scan-output-text');
+                const badge = document.getElementById('scan-status-badge');
+                const copyBtn = document.getElementById('btn-copy-scan');
+                const formatBtn = document.getElementById('btn-format-json');
+                badge.className = "px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400 flex items-center gap-1.5";
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span><span>Scanning...</span>`;
+                copyBtn.disabled = true;
+                formatBtn.disabled = true;
+
+                try {
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    const response = await fetch('/api/scan', { method: 'POST', body: formData });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || 'Unable to decode QR code.');
+
+                    outputText.value = result.result;
+                    badge.className = "px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400 flex items-center gap-1.5";
+                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>Successfully Decoded</span>`;
+                    copyBtn.disabled = false;
+                    formatBtn.disabled = false;
+                    showToast("QR code processed successfully!", "success");
+                } catch (error) {
+                    outputText.value = error.message || 'Unable to decode QR code.';
+                    badge.className = "px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-400 flex items-center gap-1.5";
+                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span><span>No QR Found</span>`;
+                    showToast(error.message || "Could not decode QR code", "error");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetScanArea(e) {
+            e.stopPropagation();
+            document.getElementById('qr-file-input').value = "";
+            document.getElementById('dropzone-prompt').classList.remove('hidden');
+            document.getElementById('preview-container').classList.add('hidden');
+            document.getElementById('scan-output-text').value = "";
+            
+            const badge = document.getElementById('scan-status-badge');
+            badge.className = "px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400 flex items-center gap-1.5";
+            badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span>Awaiting file...</span>`;
+            
+            document.getElementById('btn-copy-scan').disabled = true;
+            document.getElementById('btn-format-json').disabled = true;
+        }
+
+        function tryFormatScanJSON() {
+            const textarea = document.getElementById('scan-output-text');
+            try {
+                const parsed = JSON.parse(textarea.value);
+                textarea.value = JSON.stringify(parsed, null, 2);
+                showToast("Formatted as JSON!", "success");
+            } catch (e) {
+                showToast("Content is not valid JSON", "error");
+            }
+        }
+
+        // Drag & Drop Highlight Effects
+        const dropzone = document.getElementById('dropzone');
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('border-brand-500', 'bg-brand-50/20');
+            }, false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('border-brand-500', 'bg-brand-50/20');
+            }, false);
+        });
+
+        // ================= SECTION 2: GENERATE QR CODE LOGIC =================
+        function loadPreset(key) {
+            document.getElementById('json-input').value = PRESETS[key] || "";
+            validateAndGenerate();
+        }
+
+        function validateAndGenerate() {
+            const val = document.getElementById('json-input').value;
+            const statusEl = document.getElementById('json-status');
+
+            if (!val.trim()) {
+                statusEl.className = "px-2.5 py-1 rounded-md text-[11px] font-medium bg-amber-900/80 text-amber-300 border border-amber-700/50 flex items-center gap-1.5";
+                statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xs"></i><span>Empty Payload</span>`;
+            } else {
+                try {
+                    JSON.parse(val);
+                    statusEl.className = "px-2.5 py-1 rounded-md text-[11px] font-medium bg-emerald-900/80 text-emerald-300 border border-emerald-700/50 flex items-center gap-1.5";
+                    statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-xs"></i><span>Valid JSON</span>`;
+                } catch (e) {
+                    statusEl.className = "px-2.5 py-1 rounded-md text-[11px] font-medium bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1.5";
+                    statusEl.innerHTML = `<i class="fa-solid fa-font text-xs"></i><span>Plain Text</span>`;
+                }
+            }
+
+            generateQRCode();
+        }
+
+        function generateQRCode() {
+            const container = document.getElementById('qrcode-container');
+            const text = document.getElementById('json-input').value.trim();
+            const size = parseInt(document.getElementById('qr-size').value, 10);
+            const eccLevel = document.getElementById('qr-ecc').value;
+            const requestID = ++generateRequestID;
+            container.innerHTML = "";
+            if (!text) return;
+
+            clearTimeout(window.qrGenerateTimer);
+            window.qrGenerateTimer = setTimeout(async () => {
+                try {
+                    const response = await fetch('/api/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ json: text, size, level: eccLevel })
+                    });
+                    if (requestID !== generateRequestID) return;
+                    if (!response.ok) {
+                        const result = await response.json();
+                        throw new Error(result.error || 'QR code generation failed.');
+                    }
+
+                    const imageURL = URL.createObjectURL(await response.blob());
+                    if (requestID !== generateRequestID) {
+                        URL.revokeObjectURL(imageURL);
+                        return;
+                    }
+                    const image = new Image();
+                    image.alt = 'Generated QR code';
+                    image.className = 'rounded-lg shadow-md';
+                    image.style.width = `${size}px`;
+                    image.style.height = `${size}px`;
+                    image.onload = () => {
+                        if (requestID !== generateRequestID) {
+                            URL.revokeObjectURL(imageURL);
+                            return;
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = size;
+                        canvas.height = size;
+                        const context = canvas.getContext('2d');
+                        context.drawImage(image, 0, 0, size, size);
+                        const pixels = context.getImageData(0, 0, size, size);
+                        const dark = document.getElementById('qr-color-dark').value;
+                        const light = document.getElementById('qr-color-light').value;
+                        const darkRGB = [1, 3, 5].map(offset => parseInt(dark.slice(offset, offset + 2), 16));
+                        const lightRGB = [1, 3, 5].map(offset => parseInt(light.slice(offset, offset + 2), 16));
+                        for (let i = 0; i < pixels.data.length; i += 4) {
+                            const rgb = (pixels.data[i] + pixels.data[i + 1] + pixels.data[i + 2]) < 384 ? darkRGB : lightRGB;
+                            pixels.data[i] = rgb[0];
+                            pixels.data[i + 1] = rgb[1];
+                            pixels.data[i + 2] = rgb[2];
+                            pixels.data[i + 3] = 255;
+                        }
+                        context.putImageData(pixels, 0, 0);
+                        image.onload = null;
+                        image.src = canvas.toDataURL('image/png');
+                        URL.revokeObjectURL(imageURL);
+                    };
+                    image.src = imageURL;
+                    container.replaceChildren(image);
+                } catch (error) {
+                    if (requestID !== generateRequestID) return;
+                    showToast(error.message || 'QR code generation failed.', 'error');
+                }
+            }, 250);
+        }
+
+        function downloadQR(format) {
+            const container = document.getElementById('qrcode-container');
+            const img = container.querySelector('img');
+            const src = img && img.src;
+
+            if (!src) {
+                showToast("No QR code available to download", "error");
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.href = src;
+            link.download = `qrcode-go-studio.${format}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast(`Downloading QR Code (.${format})`, "success");
+        }
+
+        function copyGeneratedData() {
+            const text = document.getElementById('json-input').value;
+            copyTextToClipboard(text);
+        }
+
+        // Helper Utilities
+        function copyToClipboard(elementId, btnId) {
+            const text = document.getElementById(elementId).value;
+            copyTextToClipboard(text);
+        }
+
+        function copyTextToClipboard(text) {
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Copied to clipboard!", "success");
+            }).catch(() => showToast("Failed to copy", "error"));
+        }
+
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.innerText = message;
+            if (type === "success") {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-rose-400";
+            }
+
+            toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
