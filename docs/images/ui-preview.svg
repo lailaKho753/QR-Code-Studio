@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" fill="none">
+  <defs>
+    <linearGradient id="logo" x1="30" y1="31" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#818CF8"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1" height="1" filterUnits="objectBoundingBox">
+      <feGaussianBlur stdDeviation="0"/>
+    </filter>
+  </defs>
+  <rect width="1440" height="900" rx="20" fill="#F8FAFC"/>
+  <rect x="1" y="1" width="1438" height="898" rx="19" stroke="#E2E8F0" stroke-width="2"/>
+
+  <rect x="0" y="0" width="1440" height="94" rx="20" fill="#FFFFFF"/>
+  <path d="M0 94H1440" stroke="#E2E8F0"/>
+  <rect x="32" y="25" width="44" height="44" rx="13" fill="url(#logo)"/>
+  <path d="M45 37h8v8h-8zM57 37h7v7h-7zM45 49h7v7h-7zM57 49h7v7h-7z" fill="#fff" opacity=".96"/>
+  <text x="88" y="47" fill="#0F172A" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700">Go QR Studio</text>
+  <rect x="211" y="31" width="91" height="23" rx="11.5" fill="#D1FAE5"/>
+  <text x="222" y="47" fill="#047857" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="600">Go Powered</text>
+  <text x="88" y="67" fill="#64748B" font-family="Inter,Arial,sans-serif" font-size="11">High-performance QR processing backend</text>
+
+  <rect x="548" y="25" width="345" height="46" rx="13" fill="#F1F5F9" stroke="#E2E8F0"/>
+  <rect x="554" y="30" width="163" height="36" rx="10" fill="#FFFFFF"/>
+  <text x="577" y="53" fill="#4F46E5" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600">⌗  Scan QR</text>
+  <text x="748" y="53" fill="#475569" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="500">✦  Generate QR</text>
+  <circle cx="1281" cy="48" r="5" fill="#10B981"/>
+  <text x="1295" y="52" fill="#64748B" font-family="Inter,Arial,sans-serif" font-size="12">Ready</text>
+
+  <text x="72" y="151" fill="#4F46E5" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1.7">QR CODE SCANNER</text>
+  <text x="72" y="196" fill="#0F172A" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700">Scan QR Code</text>
+  <text x="72" y="223" fill="#64748B" font-family="Inter,Arial,sans-serif" font-size="14">Upload or drag and drop an image containing a QR code to extract its content.</text>
+
+  <rect x="72" y="256" width="744" height="548" rx="18" fill="#FFFFFF" stroke="#E2E8F0"/>
+  <text x="100" y="294" fill="#0F172A" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600">Upload QR Code Image</text>
+  <text x="100" y="316" fill="#64748B" font-family="Inter,Arial,sans-serif" font-size="12">Choose an image to decode it with the Go backend.</text>
+  <rect x="100" y="340" width="688" height="332" rx="15" fill="#FFFFFF" stroke="#A5B4FC" stroke-width="2" stroke-dasharray="8 7"/>
+  <rect x="397" y="389" width="94" height="94" rx="23" fill="#EEF2FF"/>
+  <path d="M421 413h21v21h-21zM450 413h17v17h-17zM421 442h18v18h-18zM449 441h6v6h-6zM460 452h8v8h-8z" fill="#4F46E5"/>
+  <text x="444" y="520" text-anchor="middle" fill="#1E293B" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="600">Upload QR Code Image</text>
+  <text x="444" y="547" text-anchor="middle" fill="#64748B" font-family="Inter,Arial,sans-serif" font-size="13">Drag and drop your file here, or click to browse</text>
+  <rect x="370" y="565" width="148" height="25" rx="12.5" fill="#F1F5F9"/>
+  <text x="444" y="582" text-anchor="middle" fill="#64748B" font-family="Inter,Arial,sans-serif" font-size="11">PNG or JPG · Max 10 MB</text>
+  <rect x="100" y="698" width="688" height="48" rx="12" fill="#4F46E5"/>
+  <text x="444" y="728" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="600">⌗  Scan QR Code</text>
+
+  <rect x="840" y="256" width="528" height="548" rx="18" fill="#FFFFFF" stroke="#E2E8F0"/>
+  <rect x="840" y="256" width="528" height="69" rx="18" fill="#FFFFFF"/>
+  <path d="M840 325H1368" stroke="#E2E8F0"/>
+  <text x="872" y="297" fill="#0F172A" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600">Decoded Result</text>
+  <rect x="1233" y="279" width="106" height="25" rx="12.5" fill="#ECFDF5"/>
+  <circle cx="1250" cy="291" r="4" fill="#10B981"/>
+  <text x="1261" y="295" fill="#047857" font-family="Inter,Arial,sans-serif" font-size="10" font-weight="600">READY</text>
+  <rect x="872" y="357" width="464" height="363" rx="12" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <text x="896" y="391" fill="#64748B" font-family="Inter,Arial,sans-serif" font-size="10" font-weight="700" letter-spacing="1">DECODED CONTENT</text>
+  <text x="896" y="430" fill="#334155" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">{</text>
+  <text x="918" y="457" fill="#334155" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">"message": "QR code scanned",</text>
+  <text x="918" y="484" fill="#334155" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">"status": "success"</text>
+  <text x="896" y="511" fill="#334155" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13">}</text>
+  <rect x="872" y="741" width="464" height="40" rx="10" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text x="1104" y="766" text-anchor="middle" fill="#475569" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="600">Copy Content</text>
+
+  <rect x="72" y="823" width="1296" height="46" rx="11" fill="#EEF2FF"/>
+  <circle cx="96" cy="846" r="8" fill="#4F46E5"/>
+  <text x="96" y="850" text-anchor="middle" fill="#FFFFFF" font-family="Inter,Arial,sans-serif" font-size="11" font-weight="700">i</text>
+  <text x="114" y="850" fill="#475569" font-family="Inter,Arial,sans-serif" font-size="12">For accurate results, use a clear, well-lit image with the entire QR code visible.</text>
+</svg>

@@ -2,6 +2,10 @@
 
 A Go web application for scanning QR codes from images and generating QR codes from JSON or text.
 
+## Preview
+
+![Go QR Studio scan interface preview](./docs/images/ui-preview.svg)
+
 ## Features
 
 - **Scan QR** — upload or drag and drop a PNG/JPEG image to read its QR code. Maximum file size: 10 MB.
